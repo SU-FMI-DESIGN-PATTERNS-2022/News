@@ -13,6 +13,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "News.Tests", "News.Tests\Ne
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "News.WebApi", "News.WebApi\News.WebApi.csproj", "{AC6A78C4-A724-4722-8F48-FE57FEB08A73}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{312F8357-BDD3-44F5-8B73-BF12BE96F1B5}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		action-build-dev.yaml = action-build-dev.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
