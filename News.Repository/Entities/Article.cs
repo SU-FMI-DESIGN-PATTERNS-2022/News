@@ -15,6 +15,6 @@ namespace News.Repository.Entities
         public long Timestamp { get; set; }
         public string Url { get; set; }
         public long SourceId { get; set; }
-        public virtual ICollection<Tag> Tags { get; set; } = new HashSet<Tag>();
+        public virtual ICollection<NewsTag> Tags { get; set; } = new HashSet<NewsTag>();
     }
 }

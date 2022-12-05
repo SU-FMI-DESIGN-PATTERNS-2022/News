@@ -6,10 +6,13 @@ using System.Threading.Tasks;
 
 namespace News.Repository.Entities
 {
-    public class Tag
+    public class NewsTag
     {
         public long Id { get; set; }
-        public string Name { get; set; }
-        public virtual ICollection<NewsTag> Articles { get; set; } = new HashSet<NewsTag>();
+        public long ArticleId { get; set; }
+        public Article Article { get; set; }
+        public long TagId { get; set; }
+        public Tag Tag { get; set; }
+
     }
 }
