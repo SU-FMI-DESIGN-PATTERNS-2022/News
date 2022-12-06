@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using News.Repository.Contracts;
 using News.Repository.Entities;
 
 namespace News.Repository.Context
 {
-    public class NewsDbContext : DbContext, INewsDbContext
+    public class NewsDbContext : DbContext
     {
         public DbSet<Article> Articles { get; set; }
         public DbSet<Interest> Interest { get; set; }
