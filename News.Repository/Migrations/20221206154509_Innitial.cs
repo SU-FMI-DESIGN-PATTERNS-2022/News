@@ -11,37 +11,6 @@ namespace News.Repository.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Articles",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Picture = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Summary = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Timestamp = table.Column<long>(type: "bigint", nullable: false),
-                    Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SourceId = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Articles", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Interest",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Interest", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Sources",
                 columns: table => new
                 {
@@ -60,69 +29,105 @@ namespace News.Repository.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    InterestId = table.Column<long>(type: "bigint", nullable: true)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tags", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Tags_Interest_InterestId",
-                        column: x => x.InterestId,
-                        principalTable: "Interest",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "NewsTags",
+                name: "Articles",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ArticleId = table.Column<long>(type: "bigint", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Picture = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Summary = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Timestamp = table.Column<long>(type: "bigint", nullable: false),
+                    Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SourceId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Articles", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Articles_Sources_SourceId",
+                        column: x => x.SourceId,
+                        principalTable: "Sources",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Interest",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
                     TagId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NewsTags", x => x.Id);
+                    table.PrimaryKey("PK_Interest", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_NewsTags_Articles_ArticleId",
-                        column: x => x.ArticleId,
-                        principalTable: "Articles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_NewsTags_Tags_TagId",
+                        name: "FK_Interest_Tags_TagId",
                         column: x => x.TagId,
                         principalTable: "Tags",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_NewsTags_ArticleId",
-                table: "NewsTags",
-                column: "ArticleId");
+            migrationBuilder.CreateTable(
+                name: "ArticleTags",
+                columns: table => new
+                {
+                    ArticlesId = table.Column<long>(type: "bigint", nullable: false),
+                    TagsId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArticleTags", x => new { x.ArticlesId, x.TagsId });
+                    table.ForeignKey(
+                        name: "FK_ArticleTags_Articles_ArticlesId",
+                        column: x => x.ArticlesId,
+                        principalTable: "Articles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ArticleTags_Tags_TagsId",
+                        column: x => x.TagsId,
+                        principalTable: "Tags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
             migrationBuilder.CreateIndex(
-                name: "IX_NewsTags_TagId",
-                table: "NewsTags",
+                name: "IX_Articles_SourceId",
+                table: "Articles",
+                column: "SourceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleTags_TagsId",
+                table: "ArticleTags",
+                column: "TagsId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Interest_TagId",
+                table: "Interest",
                 column: "TagId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Tags_InterestId",
-                table: "Tags",
-                column: "InterestId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "NewsTags");
+                name: "ArticleTags");
 
             migrationBuilder.DropTable(
-                name: "Sources");
+                name: "Interest");
 
             migrationBuilder.DropTable(
                 name: "Articles");
@@ -131,7 +136,7 @@ namespace News.Repository.Migrations
                 name: "Tags");
 
             migrationBuilder.DropTable(
-                name: "Interest");
+                name: "Sources");
         }
     }
 }

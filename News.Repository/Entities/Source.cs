@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace News.Repository.Entities
 {
     public class Source
     {
+        [Key]
         public long Id { get; set; }
         public string Name { get; set; }
+        public ICollection<Article> Articles { get; set; }
     }
 }
