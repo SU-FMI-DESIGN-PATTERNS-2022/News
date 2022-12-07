@@ -73,27 +73,6 @@ namespace News.Repository.Migrations
                     b.ToTable("Articles");
                 });
 
-            modelBuilder.Entity("News.Repository.Entities.Interest", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<long>("TagId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TagId");
-
-                    b.ToTable("Interest");
-                });
-
             modelBuilder.Entity("News.Repository.Entities.Source", b =>
                 {
                     b.Property<long>("Id")
@@ -128,6 +107,38 @@ namespace News.Repository.Migrations
                     b.ToTable("Tags");
                 });
 
+            modelBuilder.Entity("News.Repository.Entities.User", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("TagUser", b =>
+                {
+                    b.Property<long>("TagsId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UsersId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TagsId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("Interests", (string)null);
+                });
+
             modelBuilder.Entity("ArticleTag", b =>
                 {
                     b.HasOne("News.Repository.Entities.Article", null)
@@ -154,25 +165,24 @@ namespace News.Repository.Migrations
                     b.Navigation("Source");
                 });
 
-            modelBuilder.Entity("News.Repository.Entities.Interest", b =>
+            modelBuilder.Entity("TagUser", b =>
                 {
-                    b.HasOne("News.Repository.Entities.Tag", "Tag")
-                        .WithMany("Interests")
-                        .HasForeignKey("TagId")
+                    b.HasOne("News.Repository.Entities.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Tag");
+                    b.HasOne("News.Repository.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("News.Repository.Entities.Source", b =>
                 {
                     b.Navigation("Articles");
-                });
-
-            modelBuilder.Entity("News.Repository.Entities.Tag", b =>
-                {
-                    b.Navigation("Interests");
                 });
 #pragma warning restore 612, 618
         }

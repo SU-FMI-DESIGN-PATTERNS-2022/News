@@ -7,7 +7,7 @@ namespace News.Repository.Entities
         [Key]
         public long Id { get; set; }
         public string Name { get; set; }
-        public ICollection<Interest> Interests { get; set; }
+        public ICollection<User> Users { get; set; }
         public ICollection<Article> Articles { get; set; }
     }
 }
