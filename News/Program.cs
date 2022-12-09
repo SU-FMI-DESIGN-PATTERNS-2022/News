@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using News.Repository;
+using News.Repository.Context;
+using News.Repository.Contracts;
 using News.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +13,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<NewsWorker>();
+builder.Services.AddDbContext<NewsDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("News"));
+});
+builder.Services.AddScoped<INewsRepository, NewsRepository>();
 
 var app = builder.Build();
 
