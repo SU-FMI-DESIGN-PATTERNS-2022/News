@@ -1,28 +1,28 @@
 ﻿using News.Repository;
-using News.Repository.Context;
 using NewsAPI;
 using NewsAPI.Constants;
 using NewsAPI.Models;
-using News.Repository.Entities;
+using AutoMapper;
+using ApiArticle = NewsAPI.Models.Article;
+using EntityArticle = News.Repository.Entities.Article;
+using News.Repository.Contracts;
 
 namespace News.Worker
 {
     public class NewsWorker: BackgroundService
     {
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         const int NEWS_HOURLY_UPDATE_RATE = 1;
         private readonly ILogger<NewsWorker> _logger;
         private NewsApiClient newsApiClient;
-        private readonly NewsDbContext _dbContext;
-        private readonly NewsRepository _newsRepo;
         private readonly PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromHours(NEWS_HOURLY_UPDATE_RATE));
 
-        public NewsWorker(ILogger<NewsWorker> logger, NewsDbContext dbContext, NewsRepository newsRepo)
+        public NewsWorker(IServiceScopeFactory serviceScopeFactory, ILogger<NewsWorker> logger)
         {
             string apiKey = "06833835960e41818a99eedcb231e43c";
             newsApiClient = new NewsApiClient(apiKey);
             _logger = logger;
-            _dbContext = dbContext;
-            _newsRepo = newsRepo;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -30,6 +30,7 @@ namespace News.Worker
             while (await timer.WaitForNextTickAsync(stoppingToken)
                 && !stoppingToken.IsCancellationRequested)
             {
+                _logger.LogInformation("Fetched news at " + DateTime.Now.ToString());
                 await FetchNewsAsync();
             }
         }
@@ -45,20 +46,19 @@ namespace News.Worker
 
             if (articlesResponse.Status == Statuses.Ok)
             {
-                for (int i = 0; i < articlesResponse.Articles.Count; i++)
+                var config = new MapperConfiguration(cfg => {
+                    cfg.CreateMap<ApiArticle, EntityArticle>();
+                });
+                var mapper = config.CreateMapper();
+
+                using (var scope = _serviceScopeFactory.CreateScope())
                 {
-                    NewsAPI.Models.Article article = articlesResponse.Articles[i];
-                    _newsRepo.AddArticle(
-                        new Repository.Entities.Article()
-                        {
-                           Title = article.Title,
-                           Summary = article.Description,
-                           Source= new Repository.Entities.Source() {Name = article.Source.Name}, //TODO: add article
-                           Picture = article.UrlToImage,
-                           Url = article.Url,
-                           Timestamp= //is this long supposed to be ticks or?
-                           Tags = article. // no tags in request ? 
-                        });
+                    var _newsRepo = scope.ServiceProvider.GetRequiredService<INewsRepository>();
+                    for (int i = 0; i < articlesResponse.Articles.Count; i++)
+                    {
+                        EntityArticle article = mapper.Map<EntityArticle>(articlesResponse.Articles[i]);
+                        _newsRepo.AddArticle(article);
+                    }
                 }
             }
         }
