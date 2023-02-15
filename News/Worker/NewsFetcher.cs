@@ -9,16 +9,17 @@ using News.Repository.Contracts;
 
 namespace News.Worker
 {
-    public class NewsWorker: BackgroundService
+    public class NewsFetcher: BackgroundService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
         const int NEWS_HOURLY_UPDATE_RATE = 1;
-        private readonly ILogger<NewsWorker> _logger;
-        private NewsApiClient newsApiClient;
+        private readonly ILogger<NewsFetcher> _logger;
+        private readonly NewsApiClient newsApiClient;
         private readonly PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromHours(NEWS_HOURLY_UPDATE_RATE));
 
-        public NewsWorker(IServiceScopeFactory serviceScopeFactory, ILogger<NewsWorker> logger)
+        public NewsFetcher(IServiceScopeFactory serviceScopeFactory, ILogger<NewsFetcher> logger)
         {
+            //TODO: extract api key in configuration file
             string apiKey = "06833835960e41818a99eedcb231e43c";
             newsApiClient = new NewsApiClient(apiKey);
             _logger = logger;
@@ -30,14 +31,24 @@ namespace News.Worker
             while (await timer.WaitForNextTickAsync(stoppingToken)
                 && !stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Fetched news at " + DateTime.Now.ToString());
-                await FetchNewsAsync();
+                try
+                {
+                    _logger.LogInformation("Fetched news at " 
+                        + DateTime.Now.ToString());
+                    FetchNewsAsync();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogInformation("Problem occured when retrieving news at "
+                        + DateTime.Now.ToString() +$"with message {e.Message}");
+                    throw;
+                }
             }
         }
 
-        private async Task FetchNewsAsync()
+        private async void FetchNewsAsync()
         {
-            var articlesResponse = newsApiClient.GetEverything(new EverythingRequest
+            var articlesResponse = await newsApiClient.GetEverythingAsync(new EverythingRequest
             {
                 SortBy = SortBys.Popularity,
                 Language = Languages.EN,

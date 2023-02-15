@@ -19,8 +19,11 @@ builder.Services.AddDbContext<NewsDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("News"));
 });
+
 builder.Services.AddScoped<INewsRepository, NewsRepository>();
-builder.Services.AddHostedService<NewsWorker>();
+builder.Services.AddHostedService<NewsFetcher>();
+builder.Services.AddHostedService<NewsDeleter>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
