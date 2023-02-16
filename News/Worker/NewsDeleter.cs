@@ -10,9 +10,10 @@ namespace News.Worker
     public class NewsDeleter : BackgroundService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        //TODO: wtf do you mean
         const int NEWS_DAYS_DELETION_RATE = 90; // data older than 3 months will be deleted
         private readonly ILogger<NewsFetcher> _logger;
-        private readonly PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromDays(NEWS_DAYS_DELETION_RATE));
+        private readonly PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMinutes(20));
 
         public NewsDeleter(IServiceScopeFactory serviceScopeFactory, ILogger<NewsFetcher> logger)
         {

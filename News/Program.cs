@@ -3,6 +3,9 @@ using News.Repository;
 using News.Repository.Context;
 using News.Repository.Contracts;
 using News.Worker;
+using AutoMapper;
+using News.Mapping;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,7 @@ builder.Services.AddDbContext<NewsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("News"));
 });
 
+builder.Services.AddAutoMapper(Assembly.GetAssembly(typeof(ApiMappingProfile)));
 builder.Services.AddScoped<INewsRepository, NewsRepository>();
 builder.Services.AddHostedService<NewsFetcher>();
 builder.Services.AddHostedService<NewsDeleter>();

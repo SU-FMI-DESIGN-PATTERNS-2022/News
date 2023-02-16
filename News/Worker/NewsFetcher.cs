@@ -1,10 +1,10 @@
-﻿using News.Repository;
-using NewsAPI;
+﻿using NewsAPI;
 using NewsAPI.Constants;
 using NewsAPI.Models;
 using AutoMapper;
 using ApiArticle = NewsAPI.Models.Article;
 using EntityArticle = News.Repository.Entities.Article;
+using EntitySource = News.Repository.Entities.Source;
 using News.Repository.Contracts;
 
 namespace News.Worker
@@ -12,18 +12,20 @@ namespace News.Worker
     public class NewsFetcher: BackgroundService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        const int NEWS_HOURLY_UPDATE_RATE = 1;
+        const int NEWS_HOURLY_UPDATE_RATE = 10;
         private readonly ILogger<NewsFetcher> _logger;
+        private readonly IMapper _mapper;
         private readonly NewsApiClient newsApiClient;
-        private readonly PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromHours(NEWS_HOURLY_UPDATE_RATE));
+        private readonly PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(NEWS_HOURLY_UPDATE_RATE));
 
-        public NewsFetcher(IServiceScopeFactory serviceScopeFactory, ILogger<NewsFetcher> logger)
+        public NewsFetcher(IServiceScopeFactory serviceScopeFactory, ILogger<NewsFetcher> logger,
+            IMapper mapper, IConfiguration configuration)
         {
-            //TODO: extract api key in configuration file
-            string apiKey = "06833835960e41818a99eedcb231e43c";
+            string apiKey = configuration.GetValue<string>("ApiKey");
             newsApiClient = new NewsApiClient(apiKey);
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
+            _mapper = mapper;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -48,26 +50,37 @@ namespace News.Worker
 
         private async void FetchNewsAsync()
         {
-            var articlesResponse = await newsApiClient.GetEverythingAsync(new EverythingRequest
+            var articlesResponse =await newsApiClient.GetEverythingAsync(new EverythingRequest
             {
+                Q= "Apple",
                 SortBy = SortBys.Popularity,
                 Language = Languages.EN,
-                From = DateTime.Now.AddMonths(-1) // unpaid API users can't fetch data older than a month;
+                From = DateTime.Now.AddMonths(-1)
             }) ;
 
             if (articlesResponse.Status == Statuses.Ok)
             {
-                var config = new MapperConfiguration(cfg => {
-                    cfg.CreateMap<ApiArticle, EntityArticle>();
-                });
-                var mapper = config.CreateMapper();
-
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var _newsRepo = scope.ServiceProvider.GetRequiredService<INewsRepository>();
+                    
                     for (int i = 0; i < articlesResponse.Articles.Count; i++)
                     {
-                        EntityArticle article = mapper.Map<EntityArticle>(articlesResponse.Articles[i]);
+                        ApiArticle current = articlesResponse.Articles[i];
+
+                        EntitySource source = _mapper.Map<EntitySource>(current.Source);
+                        EntityArticle article = _mapper.Map<EntityArticle>(articlesResponse.Articles[i]);
+                        source.Articles.Add(article);
+
+                        EntitySource existingSource = _newsRepo.GetOnlySources().Where(s => s.Name == source.Name).FirstOrDefault();
+                        if (existingSource==null)
+                        {
+                            _newsRepo.AddSource(source);
+                        }
+                        else
+                        {
+                            _newsRepo.UpdateSource(existingSource);
+                        }
                         _newsRepo.AddArticle(article);
                     }
                 }
